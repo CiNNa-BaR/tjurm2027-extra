@@ -87,4 +87,87 @@ class MAP_BASE
 */
 
 //IMPLEMENT YOUR CODE HERE
+//前面没给std后面要写好多遍。。TAT。。。
+//按理来讲初始位置应该是vector的[2][2],不知道为什么示例里给的是[1][2],我按照[2][2]写的
+int dx[4]={-1,1,0,0};
+int dy[4]={0,0,-1,1};
+struct point//定义一个坐标点的结构体
+{
+	int x;
+	int y;
+};
 
+class MAP_NAVI : public MAP_BASE
+//继承于MAP_BASE。由于没说，默认该地图能放得下3*3机器人，且在起点和重点都能放下。(我是懒狗)
+{
+private:
+	int Xn=static_cast<int>(map_in.size());
+	int Yn=static_cast<int>(map_in[0].size());//得出地图尺寸
+public:
+	void bfs()
+	{
+		std::queue<point> q;//bfs用队列实现
+		std::vector<std::vector<point>> pre(Xn, std::vector<point>(Yn, {-1, -1}));//记录前驱用来回溯画出路径
+		point start{2,2},goal{Xn-3,Yn-3};//起点和终点坐标
+		q.push(start);
+		visit[start.x][start.y]=true;
+		while(!q.empty())
+		{
+			point now=q.front();
+			q.pop();
+			if(now.x==goal.x&&now.y==goal.y) break;//到了
+			for(int i=0;i<4;i++)
+			{
+				int nextx=now.x+dx[i];
+				int nexty=now.y+dy[i];
+				if(nextx<2||nextx>=Xn-2||nexty<2||nexty>=Yn-2) continue;//越界
+				if(visit[nextx][nexty]) continue;//已经访问过
+				if(map_in[nextx-1][nexty-1]=='#'||
+					map_in[nextx-1][nexty]=='#'||
+					map_in[nextx][nexty-1]=='#'||
+					map_in[nextx][nexty]=='#'||
+					map_in[nextx][nexty+1]=='#'||
+					map_in[nextx+1][nexty-1]=='#'||
+					map_in[nextx+1][nexty]=='#'||
+					map_in[nextx+1][nexty+1]=='#') continue;//33小车遇到障碍物(小车中心点周围也就是实际车边缘挨个判断一遍) ps.这种判断方式写起来甚至比比循环八个方向判断都快，vscode真比沟槽的devc++好用吧
+				visit[nextx][nexty]=true;
+				pre[nextx][nexty]=now;
+				q.push({nextx,nexty});
+			}
+		}
+		if(visit[goal.x][goal.y]==false) std::cout<<"机器人无法从左上角到达右下角！\n";
+		else
+		{
+			point now=goal;
+			while(!(now.x==start.x&&now.y==start.y))
+			{
+				map_in[now.x][now.y]='C';//走过的中心点变成C
+				now=pre[now.x][now.y];
+			}
+			map_in[start.x][start.y]='C';//显然起点也走过
+			print(map_in);
+		}
+	}
+};
+
+int main()
+{
+	MAP_NAVI navi;
+	navi.bfs(); 
+	return 0;
+}
+//下附程序输出结果
+// #######################################################################
+// #.............................................######...........##.....#
+// #.CC........#############.CCCCCCCCCCCCC..........######.......#########
+// #..CC.......#####.........C...........C.....###...####.......##########
+// ##..C..........##.CCCCCCCCC...#######.C...............................#
+// ###.C.............C...................C...............................#
+// #...C.....####.CCCC...........######..C....................####.......#
+// #...C......##..C......#.##............C......######...................#
+// #...C.........CC......................C...............................#
+// #...CCCCCCCCCCC...............##......CCCCCCCCCCCCCCCCCCC.......#######
+// #.......................................................C.............#
+// ##########.............#######..########......#########.CCCCCCCCCCCCC.#
+// #...............................###############.......................#
+// #######################################################################
